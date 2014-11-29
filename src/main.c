@@ -3,6 +3,7 @@
 #include "twi_master.h"
 #include "app_mcp9808.h"
 #include "app_pca9535a.h"
+#include "app_max44009.h"
 
 void uart_config(void)
 {
@@ -66,7 +67,7 @@ void i2c_read_registers(uint8_t i2c_addr, uint8_t reg_addr, uint8_t len)
         return;
     }
 
-    uart_put_string("Data: 0x");
+    uart_put_string("  Data: 0x");
     for (i = 0; i < len; ++i) {
         uart_put_hex(data[i]);
     }
@@ -130,6 +131,7 @@ void GPIOTE_IRQHandler(void)
 
 #define TEMP_SENSOR (0x1b)
 #define IO_EXTENDER (0x27)
+#define LIGHT_SENSOR (0x4a)
 
 int main(void)
 {
@@ -143,18 +145,20 @@ int main(void)
         uint32_t err_code;
         int16_t  meas = 0;
 
+        // Init module
+        uart_put_string("Temperature\n");
         app_mcp9808_init(TEMP_SENSOR);
 
+        // Power on chip, read measurement and go back to low power mode
         err_code = app_mcp9808_shutdown(false);
         if (err_code != 0) { uart_put_string("Fail\n"); }
-
         err_code = app_mcp9808_temp_read(&meas);
         if (err_code != 0) { uart_put_string("Fail\n"); }
-
         //err_code = app_mcp9808_shutdown(true);
         if (err_code != 0) { uart_put_string("Fail\n"); }
 
-        uart_put_string("Temp: 0x");
+        // Print out result
+        uart_put_string("  Degrees C: 0x");
         uart_put_hex((meas >>  8) & 0xff);
         uart_put_hex((meas >>  0) & 0xff);
         uart_put_string("\n");
@@ -210,19 +214,53 @@ int main(void)
     }
 
     {
+        uint32_t err_code;
+        uint8_t exponent, mantissa;
+
+        // Init module
+        uart_put_string("Light sensor\n");
+        err_code = app_max44009_init(LIGHT_SENSOR);
+        if (err_code != 0) { uart_put_string("Fail\n"); }
+
+        // Read LUX value
+        err_code = app_max44009_lux_read(&exponent, &mantissa);
+        if (err_code != 0) { uart_put_string("Fail\n"); }
+
+        // Print out result
+        uart_put_string("  LUX: 2**0x");
+        uart_put_hex(exponent);
+        uart_put_string(" * 0x");
+        uart_put_hex(mantissa);
+        uart_put_string(" * 0.045\n");
+    }
+
+    {
         uart_put_string("Other\n");
-        //i2c_read_registers(IO_EXTENDER, 0, 2);
-        //i2c_read_registers(IO_EXTENDER, 2, 2);
-        //i2c_read_registers(IO_EXTENDER, 4, 2);
-        //i2c_read_registers(IO_EXTENDER, 6, 2);
+        i2c_read_registers(0x5c, 0x09, 1);
+        i2c_read_registers(0x5c, 0x0a, 1);
+        i2c_read_registers(0x5c, 0x0f, 1);
+        i2c_read_registers(0x5c, 0x10, 1);
+        i2c_read_registers(0x5c, 0x20, 1);
+        i2c_read_registers(0x5c, 0x21, 1);
+        i2c_read_registers(0x5c, 0x22, 1);
+        i2c_read_registers(0x5c, 0x23, 1);
+        i2c_read_registers(0x5c, 0x24, 1);
+        i2c_read_registers(0x5c, 0x25, 1);
+        i2c_read_registers(0x5c, 0x27, 1);
+        i2c_read_registers(0x5c, 0x28, 1);
+        i2c_read_registers(0x5c, 0x27, 1);
+        i2c_read_registers(0x5c, 0x29, 1);
+        i2c_read_registers(0x5c, 0x2a, 1);
+        i2c_read_registers(0x5c, 0x2b, 1);
+        i2c_read_registers(0x5c, 0x2c, 1);
+        i2c_read_registers(0x5c, 0x2e, 1);
+        i2c_read_registers(0x5c, 0x2f, 1);
+        i2c_read_registers(0x5c, 0x30, 1);
+        i2c_read_registers(0x5c, 0x31, 1);
+        i2c_read_registers(0x5c, 0x39, 1);
+        i2c_read_registers(0x5c, 0x3a, 1);
 
-        //uart_put_string("Config enabled");
         //i2c_write_registers(IO_EXTENDER, 6, 0xfb);
-        //i2c_read_registers(IO_EXTENDER, 6, 2);
-
-        //uart_put_string("Output ports");
-        //i2c_write_registers(IO_EXTENDER, 2, 0xff);
-        //i2c_read_registers(IO_EXTENDER, 2, 2);
     }
 
     while (1) ;

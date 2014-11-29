@@ -428,6 +428,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\app_pca9535a.c</FilePath>
             </File>
+            <File>
+              <FileName>app_max44009.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\app_max44009.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
