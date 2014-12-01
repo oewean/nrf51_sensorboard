@@ -11,7 +11,8 @@ uint32_t app_pca9535a_led0(bool on)
     uint8_t data_buffer[BUF_LEN];
     bool success;
 
-    // Write shutdown bit in config register
+    // TODO: read first
+    // Write led bit in config register
     data_buffer[0] = 2;
     data_buffer[1] = 0xff ^ ( on ? (1 << 2) : 0 );
     success = twi_master_transfer((m_i2c_addr << 1), data_buffer, 2, TWI_ISSUE_STOP);
@@ -72,7 +73,7 @@ static uint32_t m_configure_ports(void)
     // Set pin direction
     data_buffer[0] = 6;
     data_buffer[1] = 0xfb; // P0_2 is led0
-    data_buffer[2] = 0xff;
+    data_buffer[2] = 0xfb; // P1_2 is mpu9150 power control
     success = twi_master_transfer((m_i2c_addr << 1), data_buffer, 3, TWI_ISSUE_STOP);
     if (! success)
     {
