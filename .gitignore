@@ -27,3 +27,14 @@
 *.i*86
 *.x86_64
 *.hex
+
+# vim
+*.swp
+
+# keil
+arm/JLinkLog.txt
+arm/JLinkSettings.ini
+arm/_build/
+arm/*.vegarwe
+arm/*.dep
+arm/output.txt
