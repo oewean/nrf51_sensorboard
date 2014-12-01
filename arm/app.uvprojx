@@ -145,6 +145,7 @@
             <RestoreToolbox>1</RestoreToolbox>
             <RestoreTracepoints>1</RestoreTracepoints>
             <RestoreSysVw>1</RestoreSysVw>
+            <UsePdscDebugDescription>1</UsePdscDebugDescription>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
           <TargetSelection>6</TargetSelection>
@@ -432,6 +433,21 @@
               <FileName>app_max44009.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\app_max44009.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_lps25h.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\app_lps25h.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_mpu9150.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\app_mpu9150.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_lis3dh.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\app_lis3dh.c</FilePath>
             </File>
           </Files>
         </Group>
