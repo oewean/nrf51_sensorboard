@@ -292,12 +292,12 @@ int main(void)
         i2c_read_registers(0x68, 0x75, 1);
 
         // Read TODO: sadf
-				
-				// De-activate mpu9150
-				uart_put_string("  Deactivate mpu9150\n");
+
+        // De-activate mpu9150
+        uart_put_string("  Deactivate mpu9150\n");
         i2c_read_registers(IO_EXTENDER, 0x06, 2);
         i2c_read_registers(IO_EXTENDER, 0x02, 2);
-//			  i2c_write_registers(IO_EXTENDER, 0x03, 0xff);
+        //i2c_write_registers(IO_EXTENDER, 0x03, 0xff);
         i2c_read_registers(IO_EXTENDER, 0x02, 2);
     }
 
