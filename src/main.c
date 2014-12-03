@@ -59,7 +59,7 @@ void uart_put_string(const uint8_t * str)
 }
 
 void m_print_mpu9150_data(blapp * raw_values) {
-    uart_put_string((const uint8_t *)"  sensordata: ");
+    uart_put_string((const uint8_t *)" mpu9150: ");
 
     uart_put_hex_16(raw_values->value.x_accel);
     uart_put(',');
@@ -78,6 +78,14 @@ void m_print_mpu9150_data(blapp * raw_values) {
     uart_put_hex_16(raw_values->value.y_gyro);
     uart_put(',');
     uart_put_hex_16(raw_values->value.z_gyro);
+    uart_put(';');
+    uart_put(' ');
+
+    uart_put_hex_16(raw_values->value.x_magn);
+    uart_put(',');
+    uart_put_hex_16(raw_values->value.y_magn);
+    uart_put(',');
+    uart_put_hex_16(raw_values->value.z_magn);
 
     //uart_put_string((const uint8_t *)"\r\n");
 }
@@ -311,6 +319,7 @@ int main(void)
 
     {
         uint32_t err_code;
+        int16_t temperature;
 
         uart_put_string("Motion tracking\n");
 
@@ -354,9 +363,18 @@ int main(void)
 
         { uint32_t x = 0x0004ffff; while (--x != 0) { __NOP(); } }
 
+        err_code = mpu6050_temp_read(&temperature);
+        if (err_code != 0) { uart_put_string("  Fail\n"); }
+
+        uart_put_string("  Degrees C: 35 + (0x");
+        uart_put_hex_byte((temperature >>  8) & 0xff);
+        uart_put_hex_byte((temperature >>  0) & 0xff);
+        uart_put_string(" / 340.0)\n");
+
         blapp raw_values;
         err_code = mpu6050_raw_sensor_read(&raw_values);
         if (err_code != 0) { uart_put_string("  Fail\n"); }
+        uart_put_string(" ");
         m_print_mpu9150_data(&raw_values);
         uart_put_string("\n");
 
@@ -411,6 +429,7 @@ int main(void)
         //i2c_write_register(IO_EXTENDER, 6, 0xfb);
     }
 
+    uart_put_string("while(1)\n");
     while (1)
     {
         uint32_t err_code;
@@ -426,8 +445,6 @@ int main(void)
             uart_put_string("  Input port state:  0x");
             uart_put_hex_byte(port1);
             uart_put_hex_byte(port0);
-            if ((port0 & BUTTON0_MASK) == 0) { uart_put_string(" button0"); }
-            if ((port0 & BUTTON1_MASK) == 0) { uart_put_string(" button1"); }
 
             if ((port1 & (1 << 5)) == 0) {
                 blapp raw_values;
@@ -435,6 +452,9 @@ int main(void)
                 if (err_code != 0) { uart_put_string("  Fail\n"); }
                 m_print_mpu9150_data(&raw_values);
             }
+
+            if ((port0 & BUTTON0_MASK) == 0) { uart_put_string(" button0"); }
+            if ((port0 & BUTTON1_MASK) == 0) { uart_put_string(" button1"); }
 
             uart_put_string("\n");
         }

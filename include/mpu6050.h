@@ -40,6 +40,7 @@
 #define MPU6050_RA_INT_ENABLE               0x38
 #define MPU6050_RA_INT_STATUS               0x3A
 #define MPU6050_RA_FIRST_SENSOR_REG         0x3B
+#define MPU6050_RA_TEMP_OUT_H               0x41
 #define MPU6050_RA_SIGNAL_PATH_RESET        0x68
 #define MPU6050_RA_WHO_AM_I                 0x75
 
@@ -79,6 +80,12 @@ typedef union
         uint8_t y_gyro_l;
         uint8_t z_gyro_h;
         uint8_t z_gyro_l;
+        uint8_t x_magn_h;
+        uint8_t x_magn_l;
+        uint8_t y_magn_h;
+        uint8_t y_magn_l;
+        uint8_t z_magn_h;
+        uint8_t z_magn_l;
     } reg;
     struct
     {
@@ -89,6 +96,9 @@ typedef union
         int16_t x_gyro;
         int16_t y_gyro;
         int16_t z_gyro;
+        int16_t x_magn;
+        int16_t y_magn;
+        int16_t z_magn;
     } value;
 } blapp;
 
@@ -97,6 +107,8 @@ uint32_t mpu6050_init(uint8_t device_address);
 uint32_t mpu6050_write(uint8_t register_address, const uint8_t value);
 
 uint32_t mpu6050_read(uint8_t register_address, uint8_t *destination, uint8_t number_of_bytes);
+
+uint32_t mpu6050_temp_read(int16_t * p_meas);
 
 uint32_t mpu6050_raw_sensor_read(blapp * sensor_data);
 

@@ -84,7 +84,12 @@ uint32_t mpu6050_raw_sensor_read(blapp * sensor_data)
 {
     uint32_t err_code;
 
-    err_code = mpu6050_read(MPU6050_RA_FIRST_SENSOR_REG, (uint8_t*)sensor_data, sizeof(blapp));
+    err_code = mpu6050_read(MPU6050_RA_FIRST_SENSOR_REG, (uint8_t*)sensor_data, 14);
+    if (err_code != 0) {
+        return 1;
+    }
+
+    err_code = mpu6050_read(0x03, &sensor_data->reg.x_magn_h, 6);
     if (err_code != 0) {
         return 1;
     }
@@ -99,7 +104,26 @@ uint32_t mpu6050_raw_sensor_read(blapp * sensor_data)
         swap(&sensor_data->reg.x_gyro_h, &sensor_data->reg.x_gyro_l);
         swap(&sensor_data->reg.y_gyro_h, &sensor_data->reg.y_gyro_l);
         swap(&sensor_data->reg.z_gyro_h, &sensor_data->reg.z_gyro_l);
+
+        swap(&sensor_data->reg.x_magn_h, &sensor_data->reg.x_magn_l);
+        swap(&sensor_data->reg.y_magn_h, &sensor_data->reg.y_magn_l);
+        swap(&sensor_data->reg.z_magn_h, &sensor_data->reg.z_magn_l);
     }
+
+    return 0;
+}
+
+uint32_t mpu6050_temp_read(int16_t * p_meas)
+{
+    uint8_t data[2];
+    uint32_t err_code;
+
+    err_code = mpu6050_read(MPU6050_RA_TEMP_OUT_H, (uint8_t*)data, sizeof(data));
+    if (err_code != 0) {
+        return 1;
+    }
+
+    *p_meas = data[0] << 8 | data[1];
 
     return 0;
 }
