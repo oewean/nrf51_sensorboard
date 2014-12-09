@@ -414,9 +414,9 @@
               <FilePath>..\src\main.c</FilePath>
             </File>
             <File>
-              <FileName>twi_hw_master.c</FileName>
+              <FileName>hal_twi.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\src\twi_hw_master.c</FilePath>
+              <FilePath>..\src\hal_twi.c</FilePath>
             </File>
             <File>
               <FileName>app_mcp9808.c</FileName>
