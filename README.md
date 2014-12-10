@@ -1,6 +1,8 @@
 nrf51_sensorboard
 =================
 
+![nrf51 dongle with sensor board](https://raw.githubusercontent.com/vegarwe/nrf51_sensorboard/master/doc/IMG_20141130_220524.jpg)
+
 Sensor devices
 
 | Device name  | Device type     | Addr bits | Addr | Data sheet                                                                                                            |
