@@ -12,6 +12,20 @@
 static bool io_extender_irq_set = false;
 static bool accel_irq_set = false;
 
+#define ASSERT_SUCCESS(ERR_CODE) do {                           \
+        const uint32_t LOCAL_ERR_CODE = (ERR_CODE);             \
+        if (LOCAL_ERR_CODE != 0) {                              \
+            uart_put_string((const uint8_t *)"\nerr_code: 0x"); \
+            uart_put_hex_32(LOCAL_ERR_CODE);                    \
+            uart_put_string((const uint8_t *)" file: ");        \
+            uart_put_string((const uint8_t *)__FILE__);         \
+            uart_put_string((const uint8_t *)" line: 0x");      \
+            uart_put_hex_32(__LINE__);                          \
+            uart_put_string((const uint8_t *)"\r\n");           \
+            for (;;) {}                                         \
+        }                                                       \
+    } while (false)
+
 void uart_config(void)
 {
     NRF_UART0->PSELTXD = 9;
@@ -44,6 +58,14 @@ void uart_put_hex_16(uint16_t value)
 {
     uart_put_hex_byte((value >> 8) & 0xff);
     uart_put_hex_byte((value >> 0) & 0xff);
+}
+
+void uart_put_hex_32(uint32_t value)
+{
+    uart_put_hex_byte((value >> 24) & 0xff);
+    uart_put_hex_byte((value >> 16) & 0xff);
+    uart_put_hex_byte((value >>  8) & 0xff);
+    uart_put_hex_byte((value >>  0) & 0xff);
 }
 
 void uart_put_string(const uint8_t * str)
@@ -95,28 +117,16 @@ void i2c_read_registers(uint8_t i2c_addr, uint8_t reg_addr, uint8_t len)
     uint8_t  i;
     uint8_t  data[32] = {0};
 
+    data[0] = reg_addr; // register address
+    hal_twi_address_set(i2c_addr);
+    hal_twi_stop_mode_set(HAL_TWI_STOP_MODE_STOP_ON_RX_BUF_END);
+    ASSERT_SUCCESS(hal_twi_write(1, data));
+    ASSERT_SUCCESS(hal_twi_read(len, data));
+
     uart_put_string("  addr: 0x");
     uart_put_hex_byte(i2c_addr);
     uart_put_string(" reg_addr: 0x");
     uart_put_hex_byte(reg_addr);
-
-
-    hal_twi_address_set(i2c_addr);
-    hal_twi_stop_mode_set(HAL_TWI_STOP_MODE_STOP_ON_RX_BUF_END);
-
-    data[0] = reg_addr; // register address
-    hal_twi_write(1, data);
-    //if (! success) {
-    //    uart_put_string(" Error: addr wrong or register not found\n");
-    //    return;
-    //}
-    hal_twi_read(len, data);
-    //success = twi_master_transfer((i2c_addr << 1) | TWI_READ_BIT, data, len, TWI_ISSUE_STOP);
-    //if (! success) {
-    //    uart_put_string("  Read failed\n");
-    //    return;
-    //}
-
     uart_put_string(" data: 0x");
     for (i = 0; i < len; ++i) {
         uart_put_hex_byte(data[i]);
@@ -130,17 +140,14 @@ void i2c_write_register(uint8_t i2c_addr, uint8_t reg_addr, uint8_t value)
 
     w2_data[0] = reg_addr;
     w2_data[1] = value;
-    hal_twi_write(2, w2_data);
-
-    //if (! success) {
-    //    uart_put_string("  Write failed\n");
-    //}
+    ASSERT_SUCCESS(hal_twi_write(2, w2_data));
 }
 
 
 bool twi_master_transfer(uint8_t   address, uint8_t * data, uint8_t   data_length, bool      issue_stop_condition)
 {
-
+    ASSERT_SUCCESS( (address + 0) );
+    ASSERT_SUCCESS( (address + 1) );
     return false;
 }
 
@@ -345,11 +352,11 @@ int main(void)
 
     //    //// Set sample rate
     //    //err_code = mpu6050_write(MPU6050_RA_CONFIG, 6);
-    //    //CHECK_SUCCESS(err_code);
+    //    //ASSERT_SUCCESS(err_code);
 
     //    //// Set sample rate divider
     //    //err_code = mpu6050_write(MPU6050_RA_SMPLRT_DIV, 9);
-    //    //CHECK_SUCCESS(err_code);
+    //    //ASSERT_SUCCESS(err_code);
 
     //    // Set motion detection threshold
     //    err_code = mpu6050_write(MPU6050_RA_MOT_THR, 5);
@@ -417,28 +424,78 @@ int main(void)
     //    //i2c_read_registers(IO_EXTENDER, 0x02, 2);
     //}
 
-    //{
-    //    uint32_t err_code;
+    {
+        // Init module
+        uart_put_string("Accelerometer\n");
+        ASSERT_SUCCESS(app_lis3dh_init(ACCELEROMETER));
+        i2c_read_registers(ACCELEROMETER, 0x0f, 1);
 
-    //    // Init module
-    //    uart_put_string("Accelerometer\n");
-    //    err_code = app_lis3dh_init(ACCELEROMETER);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
+        // Config
+        //i2c_write_register(ACCELEROMETER, 0x20, (1UL << 0) // X enable
+        //                                      | (1UL << 1) // Y enable
+        //                                      | (1UL << 2) // Z enable
+        //                                      | (1UL << 3) // Low power mode enable
+        //                                      | (1UL << 4) // Data rate selection:
+        //                                      | (1UL << 5) //   0001:  1Hz, 0010:  10Hz
+        //                                      | (1UL << 6) //   0100: 50Hz, 0101: 100Hz
+        //                                      | (0UL << 7)
+        //        );
 
-    //    // Testing
-    //    //i2c_read_registers(0x68, 0x09, 1);
-    //    i2c_read_registers(0x18, 0x28, 6);
+        // Testing
+        uart_put_string("  config\n");
+        i2c_read_registers(ACCELEROMETER, 0x20, 1);
 
-    //    // Read TODO: sadf
-    //}
+        i2c_write_register(ACCELEROMETER, 0x20, 0x02);
+        //i2c_write_register(ACCELEROMETER, 0x23, 0x20);
+
+        i2c_read_registers(ACCELEROMETER, 0x20, 1);
+        i2c_read_registers(ACCELEROMETER, 0x20, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x23, 1);
+        uart_put_string("  config\n");
+
+
+        i2c_read_registers(ACCELEROMETER, 0x07, 1);
+        i2c_read_registers(ACCELEROMETER, 0x08, 2);
+        i2c_read_registers(ACCELEROMETER, 0x0a, 2);
+        i2c_read_registers(ACCELEROMETER, 0x0c, 2);
+        i2c_read_registers(ACCELEROMETER, 0x0e, 1);
+        i2c_read_registers(ACCELEROMETER, 0x0f, 1);
+        i2c_read_registers(ACCELEROMETER, 0x1f, 1);
+        i2c_read_registers(ACCELEROMETER, 0x20, 1);
+        i2c_read_registers(ACCELEROMETER, 0x21, 1);
+        i2c_read_registers(ACCELEROMETER, 0x22, 1);
+        i2c_read_registers(ACCELEROMETER, 0x23, 1);
+        i2c_read_registers(ACCELEROMETER, 0x24, 1);
+        i2c_read_registers(ACCELEROMETER, 0x25, 1);
+        i2c_read_registers(ACCELEROMETER, 0x26, 1);
+        i2c_read_registers(ACCELEROMETER, 0x27, 1);
+        i2c_read_registers(ACCELEROMETER, 0x28, 2);
+        i2c_read_registers(ACCELEROMETER, 0x2a, 2);
+        i2c_read_registers(ACCELEROMETER, 0x2c, 2);
+        i2c_read_registers(ACCELEROMETER, 0x2e, 1);
+        i2c_read_registers(ACCELEROMETER, 0x2f, 1);
+        i2c_read_registers(ACCELEROMETER, 0x30, 1);
+        i2c_read_registers(ACCELEROMETER, 0x31, 1);
+        i2c_read_registers(ACCELEROMETER, 0x32, 1);
+        i2c_read_registers(ACCELEROMETER, 0x33, 1);
+        i2c_read_registers(ACCELEROMETER, 0x38, 1);
+        i2c_read_registers(ACCELEROMETER, 0x39, 1);
+        i2c_read_registers(ACCELEROMETER, 0x3a, 1);
+        i2c_read_registers(ACCELEROMETER, 0x3b, 1);
+        i2c_read_registers(ACCELEROMETER, 0x3c, 1);
+
+        uart_put_string("  waiting\n");
+        { uint32_t x = 0x001fffff; while (--x != 0) { __NOP(); } }
+        i2c_read_registers(ACCELEROMETER, 0x08, 6);
+        i2c_read_registers(ACCELEROMETER, 0x28, 6);
+
+        // Read TODO: sadf
+    }
 
     {
         uart_put_string("Other\n");
-        i2c_read_registers(0xff, 0xff, 1);
-
-        //i2c_read_registers(PRESSURE_SENSOR, 0x0f, 1);
+        i2c_read_registers(PRESSURE_SENSOR, 0x0f, 1);
         //i2c_read_registers(MOTION_TRACKER, 0x75, 1);
-
         //i2c_write_register(IO_EXTENDER, 6, 0xfb);
     }
 

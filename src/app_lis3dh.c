@@ -1,7 +1,6 @@
 #include "app_lis3dh.h"
 #include <stdlib.h>
-//#include <string.h>
-#include "twi_master.h"
+#include "hal_twi.h"
 
 #define BUF_LEN             (32)    // TODO: Find actual size
 static uint8_t m_i2c_addr = NULL;
@@ -9,26 +8,28 @@ static uint8_t m_i2c_addr = NULL;
 static uint32_t m_check_who_am_i(void)
 {
     uint8_t data[BUF_LEN];
-    bool success;
+    uint32_t err_code;
 
     // Select who am I register for reading
     data[0] = 0x0f;
-    success = twi_master_transfer((m_i2c_addr << 1), data, 1, TWI_DONT_ISSUE_STOP);
-    if (! success)
+    hal_twi_address_set(m_i2c_addr);
+    hal_twi_stop_mode_set(HAL_TWI_STOP_MODE_STOP_ON_RX_BUF_END);
+    err_code = hal_twi_write(1, data);
+    if (err_code != HAL_TWI_STATUS_CODE_SUCCESS)
     {
-        return 1;
+        return 15;
     }
 
     // Read out register values
-    success = twi_master_transfer((m_i2c_addr << 1) | TWI_READ_BIT, data, 1, TWI_ISSUE_STOP);
-    if (! success)
+    err_code = hal_twi_read(1, data);
+    if (err_code != HAL_TWI_STATUS_CODE_SUCCESS)
     {
-        return 1;
+        return 16;
     }
 
     if (data[0] != 0x33)
     {
-        return 2;
+        return 14;
     }
 
     return 0;
