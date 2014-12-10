@@ -38,3 +38,6 @@ arm/_build/
 arm/*.vegarwe
 arm/*.dep
 arm/output.txt
+arm/app.uvoptx
+
+tmp/
