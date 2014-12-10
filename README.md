@@ -1,7 +1,8 @@
 nrf51_sensorboard
 =================
 
-h3. Sensor devices
+Sensor devices
+
 | Device name  | Device type     | Addr bits | Addr | Data sheet                                                                                                            |
 | ------------ | --------------- | --------- | ---- | --------------------------------------------------------------------------------------------------------------------- |
 | PCA9535A     | IO-extender     | 0100111   | 0x27 | [PCA9535A.pdf](http://www.nxp.com/documents/data_sheet/PCA9535A.pdf)                                                  |
