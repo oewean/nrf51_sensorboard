@@ -1,8 +1,8 @@
 #include "app_max44009.h"
 #include "hal_twi.h"
 
-#define BUF_LEN            (32)    // TODO: Find actual size
-static uint8_t m_i2c_addr = 0;
+#define BUF_LEN (32)    // TODO: Find actual size
+static uint8_t m_i2c_addr;
 
 uint32_t app_max44009_lux_read(uint8_t * p_exponent, uint8_t * p_mantissa)
 {

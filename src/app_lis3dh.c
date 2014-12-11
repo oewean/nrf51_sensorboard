@@ -1,8 +1,8 @@
 #include "app_lis3dh.h"
 #include "hal_twi.h"
 
-#define BUF_LEN            (32)    // TODO: Find actual size
-static uint8_t m_i2c_addr = 0;
+#define BUF_LEN (32)    // TODO: Find actual size
+static uint8_t m_i2c_addr;
 
 static uint32_t m_check_who_am_i(void)
 {

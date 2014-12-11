@@ -1,8 +1,8 @@
 #include "app_mcp9808.h"
 #include "hal_twi.h"
 
-#define BUF_LEN            (32)    // TODO: Find actual size
-static uint8_t m_i2c_addr = 0;
+#define BUF_LEN (32)    // TODO: Find actual size
+static uint8_t m_i2c_addr;
 
 uint32_t app_mcp9808_temp_read(int16_t * p_meas)
 {
