@@ -1,7 +1,7 @@
 #include "app_pca9535a.h"
 #include "hal_twi.h"
 
-#define BUF_LEN             (32)    // TODO: Find actual size
+#define BUF_LEN            (32)    // TODO: Find actual size
 static uint8_t m_i2c_addr = 0;
 
 uint32_t m_read_register_pairs(uint8_t reg_addr, uint8_t * port0, uint8_t * port1)

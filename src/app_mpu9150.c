@@ -1,10 +1,9 @@
 #include "app_mpu9150.h"
-#include <stdlib.h>
 #include <stdbool.h>
 #include "twi_master.h"
 
-#define BUF_LEN             (32)    // TODO: Find actual size
-static uint8_t m_i2c_addr = NULL;
+#define BUF_LEN            (32)    // TODO: Find actual size
+static uint8_t m_i2c_addr = 0;
 
 static bool m_check_who_am_i(void)
 {

@@ -1,10 +1,8 @@
 #include "app_lps25h.h"
-#include <stdlib.h>
-//#include <string.h>
 #include "twi_master.h"
 
-#define BUF_LEN             (32)    // TODO: Find actual size
-static uint8_t m_i2c_addr = NULL;
+#define BUF_LEN            (32)    // TODO: Find actual size
+static uint8_t m_i2c_addr = 0;
 
 /* TODO: Set suggested default low power settings from documentation:
  * url: http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00066332.pdf
@@ -36,7 +34,7 @@ static uint32_t m_reg_read(uint8_t reg, uint8_t * data)
     {
         return 1;
     }
-    
+
     return 0;
 }
 
