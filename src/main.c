@@ -205,6 +205,88 @@ void GPIOTE_IRQHandler(void)
 #define GREEN_LED (1UL << 22)
 #define BLUE_LED  (1UL << 23)
 
+static void mcp9808_test(void)
+{
+    int16_t  temperature = 0;
+
+    // Init module
+    uart_put_string("Temperature\n");
+    app_mcp9808_init(TEMP_SENSOR);
+
+    // Power on chip, read measurement and go back to low power mode
+    ASSERT_SUCCESS(app_mcp9808_shutdown(false));
+    // TODO: Use interrupt to know when sample is ready rather than this ugly stuff.
+    { uint32_t x = 0x000cffff; while (--x != 0) { __NOP(); } } // Spend some time waiting for temperature sample to be ready
+    ASSERT_SUCCESS(app_mcp9808_temp_read(&temperature));
+    ASSERT_SUCCESS(app_mcp9808_shutdown(true));
+
+    // Print out result
+    uart_put_string("  Degrees C: 0x");
+    uart_put_hex_byte((temperature >>  8) & 0xff);
+    uart_put_hex_byte((temperature >>  0) & 0xff);
+    uart_put_string(" / 16.0\n");
+}
+
+static void pca9535_test(void)
+{
+    uint8_t port0, port1;
+
+    // Init module
+    uart_put_string("IO Extender\n");
+    ASSERT_SUCCESS(app_pca9535a_init(IO_EXTENDER));
+
+    // Read port input state
+    ASSERT_SUCCESS(app_pca9535a_input_state_get(&port0, &port1));
+    uart_put_string("  Input port state:  0x");
+    uart_put_hex_byte(port1);
+    uart_put_hex_byte(port0);
+    if ((port0 & PCA9535A_BUTTON0_MASK) == 0) { uart_put_string(" button0"); }
+    if ((port0 & PCA9535A_BUTTON1_MASK) == 0) { uart_put_string(" button1"); }
+    uart_put_string("\n");
+
+    // Read port output state
+    ASSERT_SUCCESS(app_pca9535a_output_state_get(&port0, &port1));
+    uart_put_string("  Output port state: 0x");
+    uart_put_hex_byte(port1);
+    uart_put_hex_byte(port0);
+    uart_put_string("\n");
+
+    // Read polarity inversion state
+    // TODO
+
+    // Read port config
+    ASSERT_SUCCESS(app_pca9535a_port_config_get(&port0, &port1));
+    uart_put_string("  Port config:       0x");
+    uart_put_hex_byte(port1);
+    uart_put_hex_byte(port0);
+    uart_put_string("\n");
+
+
+    // Activate led0
+    ASSERT_SUCCESS(app_pca9535a_led0(true));
+    { uint32_t x = 0x0004ffff; while (--x != 0) { __NOP(); } }
+    ASSERT_SUCCESS(app_pca9535a_led0(false));
+}
+
+static void max4409_test(void)
+{
+    uint8_t exponent, mantissa;
+
+    // Init module
+    uart_put_string("Light sensor\n");
+    ASSERT_SUCCESS(app_max44009_init(LIGHT_SENSOR));
+
+    // Read LUX value
+    ASSERT_SUCCESS(app_max44009_lux_read(&exponent, &mantissa));
+
+    // Print out result
+    uart_put_string("  LUX: 2**0x");
+    uart_put_hex_byte(exponent);
+    uart_put_string(" * 0x");
+    uart_put_hex_byte(mantissa);
+    uart_put_string(" * 0.045\n");
+}
+
 int main(void)
 {
     uart_config();
@@ -218,114 +300,23 @@ int main(void)
     //NRF_GPIO->DIRSET = GREEN_LED;
     //NRF_GPIO->DIRSET = RED_LED;
 
-    {
-        int16_t  temperature = 0;
+    mcp9808_test();
+    pca9535_test();
 
-        // Init module
-        uart_put_string("Temperature\n");
-        app_mcp9808_init(TEMP_SENSOR);
-
-        // Power on chip, read measurement and go back to low power mode
-        ASSERT_SUCCESS(app_mcp9808_shutdown(false));
-        // TODO: Use interrupt to know when sample is ready rather than this ugly stuff.
-        { uint32_t x = 0x000cffff; while (--x != 0) { __NOP(); } } // Spend some time waiting for temperature sample to be ready
-        ASSERT_SUCCESS(app_mcp9808_temp_read(&temperature));
-        ASSERT_SUCCESS(app_mcp9808_shutdown(true));
-
-        // Print out result
-        uart_put_string("  Degrees C: 0x");
-        uart_put_hex_byte((temperature >>  8) & 0xff);
-        uart_put_hex_byte((temperature >>  0) & 0xff);
-        uart_put_string(" / 16.0\n");
-    }
-
+    max4409_test();
     //{
-    //    uint32_t err_code;
-    //    uint8_t port0, port1;
-
-    //    // Init module
-    //    uart_put_string("IO Extender\n");
-    //    err_code = app_pca9535a_init(IO_EXTENDER);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
-
-    //    // Read port input state
-    //    err_code = app_pca9535a_input_state_get(&port0, &port1);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
-    //    uart_put_string("  Input port state:  0x");
-    //    uart_put_hex_byte(port1);
-    //    uart_put_hex_byte(port0);
-    //    if ((port0 & BUTTON0_MASK) == 0) { uart_put_string(" button0"); }
-    //    if ((port0 & BUTTON1_MASK) == 0) { uart_put_string(" button1"); }
-    //    uart_put_string("\n");
-
-    //    // Read port output state
-    //    err_code = app_pca9535a_output_state_get(&port0, &port1);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
-    //    uart_put_string("  Output port state: 0x");
-    //    uart_put_hex_byte(port1);
-    //    uart_put_hex_byte(port0);
-    //    uart_put_string("\n");
-
-    //    // Read polarity inversion state
-    //    // TODO
-
-    //    // Read port config
-    //    err_code = app_pca9535a_port_config_get(&port0, &port1);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
-    //    uart_put_string("  Port config:       0x");
-    //    uart_put_hex_byte(port1);
-    //    uart_put_hex_byte(port0);
-    //    uart_put_string("\n");
-
-
-    //    // Activate led0
-    //    err_code = app_pca9535a_led0(true);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
-
-    //    { uint32_t x = 0x0004ffff; while (--x != 0) { __NOP(); } }
-
-    //    err_code = app_pca9535a_led0(false);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
-    //}
-
-    //{
-    //    uint32_t err_code;
-    //    uint8_t exponent, mantissa;
-
-    //    // Init module
-    //    uart_put_string("Light sensor\n");
-    //    err_code = app_max44009_init(LIGHT_SENSOR);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
-
-    //    // Read LUX value
-    //    err_code = app_max44009_lux_read(&exponent, &mantissa);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
-
-    //    // Print out result
-    //    uart_put_string("  LUX: 2**0x");
-    //    uart_put_hex_byte(exponent);
-    //    uart_put_string(" * 0x");
-    //    uart_put_hex_byte(mantissa);
-    //    uart_put_string(" * 0.045\n");
-    //}
-
-    //{
-    //    uint32_t err_code;
     //    int32_t pressure;
     //    int16_t temperature;
 
     //    // Init module
     //    uart_put_string("Pressure sensor\n");
-    //    err_code = app_lps25h_init(PRESSURE_SENSOR);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
+    //    ASSERT_SUCCESS(app_lps25h_init(PRESSURE_SENSOR));
 
     //    // Read pressure value
-    //    err_code = app_lps25h_press_read(&pressure);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
+    //    ASSERT_SUCCESS(app_lps25h_press_read(&pressure));
 
     //    // Read temperature value
-    //    err_code = app_lps25h_temp_read(&temperature);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
+    //    ASSERT_SUCCESS(app_lps25h_temp_read(&temperature));
 
     //    // Print out result
     //    uart_put_string("  hPa: 0x");
@@ -341,7 +332,6 @@ int main(void)
     //}
 
     //{
-    //    uint32_t err_code;
     //    int16_t temperature;
 
     //    uart_put_string("Motion tracking\n");
@@ -351,29 +341,22 @@ int main(void)
     //    i2c_write_register(0x27, 0x03, 0xff);
     //    i2c_read_registers(0x68, 0x75, 1); // who am I
 
-    //    err_code = mpu6050_init(0x68);
+    //    ASSERT_SUCCESS(mpu6050_init(0x68));
     //    // TODO: Add delays to _init. Causes problems
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
 
     //    //// Set sample rate
-    //    //err_code = mpu6050_write(MPU6050_RA_CONFIG, 6);
-    //    //ASSERT_SUCCESS(err_code);
+    //    //ASSERT_SUCCESS(mpu6050_write(MPU6050_RA_CONFIG, 6));
 
     //    //// Set sample rate divider
-    //    //err_code = mpu6050_write(MPU6050_RA_SMPLRT_DIV, 9);
-    //    //ASSERT_SUCCESS(err_code);
+    //    //ASSERT_SUCCESS(mpu6050_write(MPU6050_RA_SMPLRT_DIV, 9));
 
     //    // Set motion detection threshold
-    //    err_code = mpu6050_write(MPU6050_RA_MOT_THR, 5);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
-    //    err_code = mpu6050_write(MPU6050_RA_MOT_DUR, 2);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
+    //    ASSERT_SUCCESS(mpu6050_write(MPU6050_RA_MOT_THR, 5));
+    //    ASSERT_SUCCESS(mpu6050_write(MPU6050_RA_MOT_DUR, 2));
 
     //    // Set zero motion detection threshold
-    //    err_code = mpu6050_write(MPU6050_RA_ZRMOT_THR, 120);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
-    //    err_code = mpu6050_write(MPU6050_RA_ZRMOT_DUR, 120);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
+    //    ASSERT_SUCCESS(mpu6050_write(MPU6050_RA_ZRMOT_THR, 120));
+    //    ASSERT_SUCCESS(mpu6050_write(MPU6050_RA_ZRMOT_DUR, 120));
 
     //    // Enable data ready interrupt
     //    //uint8_t int_value = ( MPU6050_INTERRUPT_FF_MASK
@@ -381,13 +364,11 @@ int main(void)
     //    //                    | MPU6050_INTERRUPT_ZRMOT_MASK
     //    //                    | MPU6050_INTERRUPT_DATA_RDY_MASK);
     //    uint8_t int_value = ( MPU6050_INTERRUPT_MOT_MASK );
-    //    err_code = mpu6050_write(MPU6050_RA_INT_ENABLE, int_value);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
+    //    ASSERT_SUCCESS(mpu6050_write(MPU6050_RA_INT_ENABLE, int_value));
 
     //    { uint32_t x = 0x0004ffff; while (--x != 0) { __NOP(); } }
 
-    //    err_code = mpu6050_temp_read(&temperature);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
+    //    ASSERT_SUCCESS(mpu6050_temp_read(&temperature));
 
     //    uart_put_string("  Degrees C: 35 + (0x");
     //    uart_put_hex_byte((temperature >>  8) & 0xff);
@@ -395,16 +376,14 @@ int main(void)
     //    uart_put_string(" / 340.0)\n");
 
     //    blapp raw_values;
-    //    err_code = mpu6050_raw_sensor_read(&raw_values);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
+    //    ASSERT_SUCCESS(mpu6050_raw_sensor_read(&raw_values));
     //    uart_put_string(" ");
     //    m_print_mpu9150_data(&raw_values);
     //    uart_put_string("\n");
 
 
     //    //// Init module
-    //    //err_code = app_mpu9150_init(MOTION_TRACKER);
-    //    //if (err_code != 0) { uart_put_string("  Fail\n"); }
+    //    //ASSERT_SUCCESS(app_mpu9150_init(MOTION_TRACKER));
 
     //    //// Testing
     //    //i2c_read_registers(0x68, 0x6b, 1);
@@ -507,29 +486,25 @@ int main(void)
     //uart_put_string("while(1)\n");
     //while (1)
     //{
-    //    uint32_t err_code;
-
     //    if (io_extender_irq_set)
     //    {
     //        uint8_t port0, port1;
 
     //        io_extender_irq_set = false;
 
-    //        err_code = app_pca9535a_input_state_get(&port0, &port1);
-    //        if (err_code != 0) { uart_put_string("  Fail\n"); }
+    //        ASSERT_SUCCESS(app_pca9535a_input_state_get(&port0, &port1));
     //        uart_put_string("  Input port state:  0x");
     //        uart_put_hex_byte(port1);
     //        uart_put_hex_byte(port0);
 
     //        if ((port1 & (1 << 5)) == 0) {
     //            blapp raw_values;
-    //            err_code = mpu6050_raw_sensor_read(&raw_values);
-    //            if (err_code != 0) { uart_put_string("  Fail\n"); }
+    //            ASSERT_SUCCESS(mpu6050_raw_sensor_read(&raw_values));
     //            m_print_mpu9150_data(&raw_values);
     //        }
 
-    //        if ((port0 & BUTTON0_MASK) == 0) { uart_put_string(" button0"); }
-    //        if ((port0 & BUTTON1_MASK) == 0) { uart_put_string(" button1"); }
+    //        if ((port0 & PCA9535A_BUTTON0_MASK) == 0) { uart_put_string(" button0"); }
+    //        if ((port0 & PCA9535A_BUTTON1_MASK) == 0) { uart_put_string(" button1"); }
 
     //        uart_put_string("\n");
     //    }
