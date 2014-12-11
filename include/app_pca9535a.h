@@ -4,8 +4,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define BUTTON0_MASK (1UL << 0)
-#define BUTTON1_MASK (1UL << 1)
+#define PCA9535A_RA_INPUT_0 0x00
+#define PCA9535A_RA_INPUT_1 0x01
+#define PCA9535A_RA_OUTPUT_0 0x02
+#define PCA9535A_RA_OUTPUT_1 0x03
+#define PCA9535A_RA_CONFIG_0 0x06
+#define PCA9535A_RA_CONFIG_1 0x07
+
+#define PCA9535A_BUTTON0_MASK (1UL << 0)
+#define PCA9535A_BUTTON1_MASK (1UL << 1)
 
 uint32_t app_pca9535a_init(uint8_t i2c_addr);
 uint32_t app_pca9535a_led0(bool on);
