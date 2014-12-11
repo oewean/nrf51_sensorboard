@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define MAX44009_RA_LUX_H 0x03
+
 uint32_t app_max44009_lux_read(uint8_t * exponent, uint8_t * mantissa);
 uint32_t app_max44009_init(uint8_t i2c_addr);
 

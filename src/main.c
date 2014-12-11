@@ -302,8 +302,8 @@ int main(void)
 
     mcp9808_test();
     pca9535_test();
-
     max4409_test();
+
     //{
     //    int32_t pressure;
     //    int16_t temperature;
