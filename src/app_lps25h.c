@@ -1,8 +1,8 @@
 #include "app_lps25h.h"
-#include "twi_master.h"
+#include "hal_twi.h"
 
-#define BUF_LEN            (32)    // TODO: Find actual size
-static uint8_t m_i2c_addr = 0;
+#define BUF_LEN (32)    // TODO: Find actual size
+static uint8_t m_i2c_addr;
 
 /* TODO: Set suggested default low power settings from documentation:
  * url: http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00066332.pdf
@@ -19,20 +19,23 @@ static uint8_t m_i2c_addr = 0;
 
 static uint32_t m_reg_read(uint8_t reg, uint8_t * data)
 {
-    bool success;
+    uint32_t err_code;
+
+    hal_twi_address_set(m_i2c_addr);
+    hal_twi_stop_mode_set(HAL_TWI_STOP_MODE_STOP_ON_RX_BUF_END);
 
     // Select register for reading
-    success = twi_master_transfer((m_i2c_addr << 1), &reg, 1, TWI_DONT_ISSUE_STOP);
-    if (! success)
+    err_code = hal_twi_write(1, &reg);
+    if (err_code != HAL_TWI_STATUS_CODE_SUCCESS)
     {
-        return 1;
+        return err_code;
     }
 
     // Read out register value
-    success = twi_master_transfer((m_i2c_addr << 1) | TWI_READ_BIT, data, 1, TWI_ISSUE_STOP);
-    if (! success)
+    err_code = hal_twi_read(1, data);
+    if (err_code != HAL_TWI_STATUS_CODE_SUCCESS)
     {
-        return 1;
+        return err_code;
     }
 
     return 0;
@@ -89,21 +92,24 @@ uint32_t app_lps25h_temp_read(int16_t * p_meas)
 static uint32_t m_check_who_am_i(void)
 {
     uint8_t data[BUF_LEN];
-    bool success;
+    uint32_t err_code;
+
+    hal_twi_address_set(m_i2c_addr);
+    hal_twi_stop_mode_set(HAL_TWI_STOP_MODE_STOP_ON_RX_BUF_END);
 
     // Select who am I register for reading
     data[0] = 0x0f;
-    success = twi_master_transfer((m_i2c_addr << 1), data, 1, TWI_DONT_ISSUE_STOP);
-    if (! success)
+    err_code = hal_twi_write(1, data);
+    if (err_code != HAL_TWI_STATUS_CODE_SUCCESS)
     {
-        return 1;
+        return err_code;
     }
 
     // Read out register values
-    success = twi_master_transfer((m_i2c_addr << 1) | TWI_READ_BIT, data, 1, TWI_ISSUE_STOP);
-    if (! success)
+    err_code = hal_twi_read(1, data);
+    if (err_code != HAL_TWI_STATUS_CODE_SUCCESS)
     {
-        return 1;
+        return err_code;
     }
 
     if (data[0] != 0xbd)
