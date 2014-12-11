@@ -140,6 +140,8 @@ void i2c_write_register(uint8_t i2c_addr, uint8_t reg_addr, uint8_t value)
 
     w2_data[0] = reg_addr;
     w2_data[1] = value;
+    hal_twi_address_set(i2c_addr);
+    hal_twi_stop_mode_set(HAL_TWI_STOP_MODE_STOP_ON_TX_BUF_END);
     ASSERT_SUCCESS(hal_twi_write(2, w2_data));
 }
 
@@ -199,6 +201,10 @@ void GPIOTE_IRQHandler(void)
 #define MOTION_TRACKER (0x68)
 #define ACCELEROMETER (0x18)
 
+#define RED_LED   (1UL << 21)
+#define GREEN_LED (1UL << 22)
+#define BLUE_LED  (1UL << 23)
+
 int main(void)
 {
     uart_config();
@@ -208,31 +214,30 @@ int main(void)
     hal_twi_init();
     gpiote_init();
 
-    //NRF_GPIO->DIRSET = 0xff7c0000;
-    //NRF_GPIO->OUTCLR = 0xff7c0000;
+    //NRF_GPIO->DIRSET = BLUE_LED;
+    //NRF_GPIO->DIRSET = GREEN_LED;
+    //NRF_GPIO->DIRSET = RED_LED;
 
-    //{
-    //    uint32_t err_code;
-    //    int16_t  temperature = 0;
+    {
+        int16_t  temperature = 0;
 
-    //    // Init module
-    //    uart_put_string("Temperature\n");
-    //    app_mcp9808_init(TEMP_SENSOR);
+        // Init module
+        uart_put_string("Temperature\n");
+        app_mcp9808_init(TEMP_SENSOR);
 
-    //    // Power on chip, read measurement and go back to low power mode
-    //    err_code = app_mcp9808_shutdown(false);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
-    //    err_code = app_mcp9808_temp_read(&temperature);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
-    //    //err_code = app_mcp9808_shutdown(true);
-    //    if (err_code != 0) { uart_put_string("  Fail\n"); }
+        // Power on chip, read measurement and go back to low power mode
+        ASSERT_SUCCESS(app_mcp9808_shutdown(false));
+        // TODO: Use interrupt to know when sample is ready rather than this ugly stuff.
+        { uint32_t x = 0x000cffff; while (--x != 0) { __NOP(); } } // Spend some time waiting for temperature sample to be ready
+        ASSERT_SUCCESS(app_mcp9808_temp_read(&temperature));
+        ASSERT_SUCCESS(app_mcp9808_shutdown(true));
 
-    //    // Print out result
-    //    uart_put_string("  Degrees C: 0x");
-    //    uart_put_hex_byte((temperature >>  8) & 0xff);
-    //    uart_put_hex_byte((temperature >>  0) & 0xff);
-    //    uart_put_string(" / 16.0\n");
-    //}
+        // Print out result
+        uart_put_string("  Degrees C: 0x");
+        uart_put_hex_byte((temperature >>  8) & 0xff);
+        uart_put_hex_byte((temperature >>  0) & 0xff);
+        uart_put_string(" / 16.0\n");
+    }
 
     //{
     //    uint32_t err_code;
@@ -442,54 +447,54 @@ int main(void)
         //        );
 
         // Testing
-        uart_put_string("  config\n");
-        i2c_read_registers(ACCELEROMETER, 0x20, 1);
+        //uart_put_string("  config\n");
+        //i2c_read_registers(ACCELEROMETER, 0x20, 1);
 
-        i2c_write_register(ACCELEROMETER, 0x20, 0x02);
-        //i2c_write_register(ACCELEROMETER, 0x23, 0x20);
+        //i2c_write_register(ACCELEROMETER, 0x20, 0x02);
+        ////i2c_write_register(ACCELEROMETER, 0x23, 0x20);
 
-        i2c_read_registers(ACCELEROMETER, 0x20, 1);
-        i2c_read_registers(ACCELEROMETER, 0x20, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x20, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x20, 1);
+        ////i2c_read_registers(ACCELEROMETER, 0x23, 1);
+        //uart_put_string("  config\n");
+
+
+        //i2c_read_registers(ACCELEROMETER, 0x07, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x08, 2);
+        //i2c_read_registers(ACCELEROMETER, 0x0a, 2);
+        //i2c_read_registers(ACCELEROMETER, 0x0c, 2);
+        //i2c_read_registers(ACCELEROMETER, 0x0e, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x0f, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x1f, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x20, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x21, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x22, 1);
         //i2c_read_registers(ACCELEROMETER, 0x23, 1);
-        uart_put_string("  config\n");
+        //i2c_read_registers(ACCELEROMETER, 0x24, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x25, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x26, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x27, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x28, 2);
+        //i2c_read_registers(ACCELEROMETER, 0x2a, 2);
+        //i2c_read_registers(ACCELEROMETER, 0x2c, 2);
+        //i2c_read_registers(ACCELEROMETER, 0x2e, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x2f, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x30, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x31, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x32, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x33, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x38, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x39, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x3a, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x3b, 1);
+        //i2c_read_registers(ACCELEROMETER, 0x3c, 1);
 
+        //uart_put_string("  waiting\n");
+        //{ uint32_t x = 0x001fffff; while (--x != 0) { __NOP(); } }
+        //i2c_read_registers(ACCELEROMETER, 0x08, 6);
+        //i2c_read_registers(ACCELEROMETER, 0x28, 6);
 
-        i2c_read_registers(ACCELEROMETER, 0x07, 1);
-        i2c_read_registers(ACCELEROMETER, 0x08, 2);
-        i2c_read_registers(ACCELEROMETER, 0x0a, 2);
-        i2c_read_registers(ACCELEROMETER, 0x0c, 2);
-        i2c_read_registers(ACCELEROMETER, 0x0e, 1);
-        i2c_read_registers(ACCELEROMETER, 0x0f, 1);
-        i2c_read_registers(ACCELEROMETER, 0x1f, 1);
-        i2c_read_registers(ACCELEROMETER, 0x20, 1);
-        i2c_read_registers(ACCELEROMETER, 0x21, 1);
-        i2c_read_registers(ACCELEROMETER, 0x22, 1);
-        i2c_read_registers(ACCELEROMETER, 0x23, 1);
-        i2c_read_registers(ACCELEROMETER, 0x24, 1);
-        i2c_read_registers(ACCELEROMETER, 0x25, 1);
-        i2c_read_registers(ACCELEROMETER, 0x26, 1);
-        i2c_read_registers(ACCELEROMETER, 0x27, 1);
-        i2c_read_registers(ACCELEROMETER, 0x28, 2);
-        i2c_read_registers(ACCELEROMETER, 0x2a, 2);
-        i2c_read_registers(ACCELEROMETER, 0x2c, 2);
-        i2c_read_registers(ACCELEROMETER, 0x2e, 1);
-        i2c_read_registers(ACCELEROMETER, 0x2f, 1);
-        i2c_read_registers(ACCELEROMETER, 0x30, 1);
-        i2c_read_registers(ACCELEROMETER, 0x31, 1);
-        i2c_read_registers(ACCELEROMETER, 0x32, 1);
-        i2c_read_registers(ACCELEROMETER, 0x33, 1);
-        i2c_read_registers(ACCELEROMETER, 0x38, 1);
-        i2c_read_registers(ACCELEROMETER, 0x39, 1);
-        i2c_read_registers(ACCELEROMETER, 0x3a, 1);
-        i2c_read_registers(ACCELEROMETER, 0x3b, 1);
-        i2c_read_registers(ACCELEROMETER, 0x3c, 1);
-
-        uart_put_string("  waiting\n");
-        { uint32_t x = 0x001fffff; while (--x != 0) { __NOP(); } }
-        i2c_read_registers(ACCELEROMETER, 0x08, 6);
-        i2c_read_registers(ACCELEROMETER, 0x28, 6);
-
-        // Read TODO: sadf
+        //// Read TODO: sadf
     }
 
     {

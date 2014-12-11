@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define MCP9808_RA_CONFIG 0x01
+#define MCP9808_RA_TEMP   0x05
+
 /**@brief Application MCP9808 Temperature Measurment Read.
  *
  * @param[out]   meas  MCP9808 temperature measurement (unit 0.125°C pr default).
